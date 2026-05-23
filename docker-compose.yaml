@@ -13,5 +13,14 @@ services:
     volumes:
       - project_pg_data:/var/lib/postgresql/data
 
+  backend:
+    image: payk96/systemproject:latest
+    container_name: systemproject-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+
 volumes:
   project_pg_data:

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>System Project</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1100px;
+            margin: 40px auto;
+            line-height: 1.4;
+        }
+        .topbar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .panel {
+            border: 1px solid #ccc;
+            padding: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        .meta {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <h1>Project Management System</h1>
+    <a th:href="@{/projects}">Projects</a>
+    <a th:href="@{/tasks}">Tasks</a>
+</div>
+<p class="meta">
+    Signed in as <strong th:text="${username}"></strong>
+</p>
+<form th:action="@{/logout}" method="post">
+    <button type="submit">Logout</button>
+</form>
+
+<div class="summary">
+    <div class="panel">
+        <strong>Projects</strong>
+        <div th:text="${#lists.size(projects)}"></div>
+    </div>
+    <div class="panel">
+        <strong>Tasks</strong>
+        <div th:text="${#lists.size(tasks)}"></div>
+    </div>
+    <div class="panel" th:if="${isAdmin}">
+        <strong>Users</strong>
+        <div th:text="${userCount}"></div>
+    </div>
+    <div class="panel" th:if="${!isAdmin}">
+        <strong>My Access</strong>
+        <div>User workspace</div>
+    </div>
+</div>
+
+<div th:if="${isAdmin}" class="panel">
+    <h2>System Overview</h2>
+    <p>
+        Total users: <strong th:text="${userCount}"></strong>,
+        projects: <strong th:text="${projectCount}"></strong>,
+        tasks: <strong th:text="${taskCount}"></strong>
+    </p>
+</div>
+
+<div th:unless="${isAdmin}" class="panel">
+    <h2>My Workspace</h2>
+    <p>You can view only your projects and tasks, and update statuses only for your own tasks.</p>
+</div>
+
+<div class="panel">
+    <h2 th:text="${isAdmin} ? 'Projects Overview' : 'My Projects'"></h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Members</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(projects)}">
+            <td colspan="3">No projects available.</td>
+        </tr>
+        <tr th:each="project : ${projects}">
+            <td th:text="${project.name}"></td>
+            <td th:text="${project.description}"></td>
+            <td th:text="${#lists.size(project.members)}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="panel">
+    <h2 th:text="${isAdmin} ? 'Tasks Overview' : 'My Tasks'"></h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Project</th>
+            <th>Assignee</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(tasks)}">
+            <td colspan="4">No tasks available.</td>
+        </tr>
+        <tr th:each="task : ${tasks}">
+            <td th:text="${task.name}"></td>
+            <td th:text="${task.projectName}"></td>
+            <td th:text="${task.assigneeUsername != null ? task.assigneeUsername : 'Unassigned'}"></td>
+            <td th:text="${task.status}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:if="${isAdmin}">
+    <div class="panel">
+    <h2>Users</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Role</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}">
+            <td th:text="${user.id}"></td>
+            <td th:text="${user.username}"></td>
+            <td th:text="${user.role}"></td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+</body>
+</html>
