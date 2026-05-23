@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tasks</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            line-height: 1.4;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .topbar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .stack {
+            display: grid;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <h1>Tasks</h1>
+    <a th:href="@{/}">Home</a>
+    <a th:href="@{/projects}">Projects</a>
+    <a th:if="${isAdmin}" th:href="@{/tasks/new}">Create task</a>
+</div>
+
+<p th:if="${isAdmin}">Administrator view: all tasks, assignment and editing.</p>
+<p th:unless="${isAdmin}">User view: only tasks assigned to you.</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Project</th>
+        <th>Assignee</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:if="${#lists.isEmpty(tasks)}">
+        <td colspan="6">No tasks yet.</td>
+    </tr>
+    <tr th:each="task : ${tasks}">
+        <td th:text="${task.name}"></td>
+        <td th:text="${task.description}"></td>
+        <td th:text="${task.projectName}"></td>
+        <td th:text="${task.assigneeUsername != null ? task.assigneeUsername : 'Unassigned'}"></td>
+        <td th:text="${task.status}"></td>
+        <td>
+            <div class="stack">
+                <form th:action="@{/tasks/{id}/status(id=${task.id})}" method="post">
+                    <select name="status">
+                        <option th:each="statusOption : ${statuses}"
+                                th:value="${statusOption}"
+                                th:text="${statusOption}"
+                                th:selected="${statusOption == task.status}"></option>
+                    </select>
+                    <button type="submit">Update status</button>
+                </form>
+                <a th:if="${isAdmin}" th:href="@{/tasks/{id}/edit(id=${task.id})}">Edit</a>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16
+    container_name: project-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: naumen
+      POSTGRES_USER: project
+      POSTGRES_PASSWORD: project
+    volumes:
+      - project_pg_data:/var/lib/postgresql/data
+
+  backend:
+    image: payk96/systemproject:latest
+    container_name: systemproject-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+
+volumes:
+  project_pg_data:

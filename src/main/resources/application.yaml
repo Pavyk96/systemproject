@@ -1,3 +1,25 @@
 spring:
   application:
     name: systemproject
+  datasource:
+    url: jdbc:postgresql://project-postgres:5432/naumen
+    username: project
+    password: project
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8080
+
+app:
+  bootstrap-admin:
+    username: admin
+    password: admin

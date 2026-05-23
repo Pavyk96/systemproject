@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${formTitle}">Project form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 720px;
+            margin: 40px auto;
+            line-height: 1.4;
+        }
+        form {
+            display: grid;
+            gap: 12px;
+        }
+        label {
+            display: grid;
+            gap: 4px;
+        }
+        textarea {
+            min-height: 140px;
+        }
+        .error {
+            color: #b00020;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<h1 th:text="${formTitle}">Project form</h1>
+<form th:action="${formAction}" th:object="${projectRequest}" method="post">
+    <label>
+        Name
+        <input type="text" th:field="*{name}" required>
+        <span class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+    </label>
+    <label>
+        Description
+        <textarea th:field="*{description}" required></textarea>
+        <span class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
+    </label>
+    <div>
+        <button type="submit" th:text="${submitLabel}">Save</button>
+        <a th:href="@{/projects}">Back</a>
+    </div>
+</form>
+</body>
+</html>
