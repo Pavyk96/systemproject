@@ -1,6 +1,14 @@
 package naumen.daniilmezev.systemproject.controller;
 
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import naumen.daniilmezev.systemproject.dto.TaskRequest;
 import naumen.daniilmezev.systemproject.entity.TaskStatus;
 import naumen.daniilmezev.systemproject.service.ProjectService;
@@ -21,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/tasks")
+@Tag(name = "Tasks", description = "Task listing, forms, and status updates.")
 public class TaskController {
 
     private final TaskService taskService;
@@ -34,7 +43,12 @@ public class TaskController {
     }
 
     @GetMapping
-    public String tasks(Authentication authentication, Model model) {
+    @Operation(summary = "Open tasks page", description = "Returns the tasks page with tasks visible to the current user.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tasks page rendered", content = @Content(mediaType = "text/html")),
+            @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
+    public String tasks(@Parameter(hidden = true) Authentication authentication, @Parameter(hidden = true) Model model) {
         boolean admin = isAdmin(authentication);
         model.addAttribute("isAdmin", admin);
         model.addAttribute("statuses", TaskStatus.values());
@@ -44,7 +58,12 @@ public class TaskController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/new")
-    public String createForm(Model model) {
+    @Operation(summary = "Open create task form", description = "Returns the HTML form for creating a new task. Available to administrators.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Task form rendered", content = @Content(mediaType = "text/html")),
+            @ApiResponse(responseCode = "403", description = "Administrator role required")
+    })
+    public String createForm(@Parameter(hidden = true) Model model) {
         model.addAttribute("taskRequest", new TaskRequest());
         fillForm(model, "Create task", "Create", "/tasks");
         return "task-form";
@@ -52,10 +71,26 @@ public class TaskController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
+    @Operation(
+            summary = "Create task",
+            description = "Creates a new task from a form submission. Available to administrators.",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/x-www-form-urlencoded",
+                            schema = @Schema(implementation = TaskRequest.class)
+                    )
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "302", description = "Task created, redirected to tasks page"),
+            @ApiResponse(responseCode = "200", description = "Validation or business error, task form rendered again", content = @Content(mediaType = "text/html")),
+            @ApiResponse(responseCode = "403", description = "Administrator role required")
+    })
     public String createTask(
             @Valid @ModelAttribute("taskRequest") TaskRequest taskRequest,
-            BindingResult bindingResult,
-            Model model
+            @Parameter(hidden = true) BindingResult bindingResult,
+            @Parameter(hidden = true) Model model
     ) {
         if (bindingResult.hasErrors()) {
             fillForm(model, "Create task", "Create", "/tasks");
@@ -74,7 +109,12 @@ public class TaskController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/edit")
-    public String editForm(@PathVariable Long id, Model model) {
+    @Operation(summary = "Open edit task form", description = "Returns the HTML form for editing an existing task. Available to administrators.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Task edit form rendered", content = @Content(mediaType = "text/html")),
+            @ApiResponse(responseCode = "403", description = "Administrator role required")
+    })
+    public String editForm(@Parameter(description = "Task identifier.") @PathVariable Long id, @Parameter(hidden = true) Model model) {
         model.addAttribute("taskRequest", taskService.getTaskRequest(id));
         fillForm(model, "Edit task", "Save", "/tasks/" + id);
         return "task-form";
@@ -82,11 +122,27 @@ public class TaskController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}")
+    @Operation(
+            summary = "Update task",
+            description = "Updates an existing task from a form submission. Available to administrators.",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/x-www-form-urlencoded",
+                            schema = @Schema(implementation = TaskRequest.class)
+                    )
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "302", description = "Task updated, redirected to tasks page"),
+            @ApiResponse(responseCode = "200", description = "Validation or business error, task form rendered again", content = @Content(mediaType = "text/html")),
+            @ApiResponse(responseCode = "403", description = "Administrator role required")
+    })
     public String updateTask(
-            @PathVariable Long id,
+            @Parameter(description = "Task identifier.") @PathVariable Long id,
             @Valid @ModelAttribute("taskRequest") TaskRequest taskRequest,
-            BindingResult bindingResult,
-            Model model
+            @Parameter(hidden = true) BindingResult bindingResult,
+            @Parameter(hidden = true) Model model
     ) {
         if (bindingResult.hasErrors()) {
             fillForm(model, "Edit task", "Save", "/tasks/" + id);
@@ -104,10 +160,16 @@ public class TaskController {
     }
 
     @PostMapping("/{id}/status")
+    @Operation(summary = "Update task status", description = "Changes task status for an administrator or eligible assignee.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "302", description = "Status updated, redirected to tasks page"),
+            @ApiResponse(responseCode = "403", description = "Task is not accessible for status update"),
+            @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
     public String updateStatus(
-            @PathVariable Long id,
-            @RequestParam TaskStatus status,
-            Authentication authentication
+            @Parameter(description = "Task identifier.") @PathVariable Long id,
+            @Parameter(description = "New task status.") @RequestParam TaskStatus status,
+            @Parameter(hidden = true) Authentication authentication
     ) {
         boolean admin = isAdmin(authentication);
         try {

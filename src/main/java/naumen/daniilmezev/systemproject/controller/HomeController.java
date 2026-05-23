@@ -1,5 +1,11 @@
 package naumen.daniilmezev.systemproject.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import naumen.daniilmezev.systemproject.service.ProjectService;
 import naumen.daniilmezev.systemproject.service.TaskService;
 import naumen.daniilmezev.systemproject.service.UserService;
@@ -9,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
+@Tag(name = "Home", description = "Dashboard and overview page.")
 public class HomeController {
 
     private final UserService userService;
@@ -22,7 +29,12 @@ public class HomeController {
     }
 
     @GetMapping("/")
-    public String home(Authentication authentication, Model model) {
+    @Operation(summary = "Open dashboard", description = "Returns the main dashboard page with user, project, and task summaries.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Dashboard page rendered", content = @Content(mediaType = "text/html")),
+            @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
+    public String home(@Parameter(hidden = true) Authentication authentication, @Parameter(hidden = true) Model model) {
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
         model.addAttribute("username", authentication.getName());
